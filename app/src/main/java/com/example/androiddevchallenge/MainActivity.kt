@@ -18,19 +18,52 @@ package com.example.androiddevchallenge
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.navArgument
+import androidx.navigation.compose.navigate
+import androidx.navigation.compose.rememberNavController
 import com.example.androiddevchallenge.ui.theme.MyTheme
+
+@Composable
+fun SimpleNav() {
+    val navController = rememberNavController()
+    NavHost(navController, startDestination = "MyApp") { // this: NavGraphBuilder
+        composable("MyApp") {
+            MyApp(navController)
+        }
+        composable("Pet/{id}", arguments = listOf(navArgument("id") { type = NavType.IntType })) {
+            backStackEntry ->
+            Pet(backStackEntry.arguments?.getInt("id") ?: 0)
+        }
+    }
+}
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MyTheme {
-                MyApp()
+                SimpleNav()
             }
         }
     }
@@ -38,9 +71,38 @@ class MainActivity : AppCompatActivity() {
 
 // Start building your app here!
 @Composable
-fun MyApp() {
+fun MyApp(navController: NavController) {
     Surface(color = MaterialTheme.colors.background) {
-        Text(text = "Ready... Set... GO!")
+        Column {
+            TopAppBar(title = { Text("Adopt a Pet!") })
+            // Text(text = "Ready... Set... GO!")
+            MessageList(pets, navController)
+        }
+    }
+}
+
+@Composable
+fun PetRow(pet: Pet, navController: NavController) {
+    Card(
+        backgroundColor = MaterialTheme.colors.background, elevation = 12.dp,
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth()
+            .clickable(onClick = { navController.navigate("Pet/${pet.id}") })
+
+    ) {
+        Column {
+            Text(pet.name, style = MaterialTheme.typography.h1, textAlign = TextAlign.Center, modifier = Modifier.padding(24.dp))
+        }
+    }
+}
+
+@Composable
+fun MessageList(pets: Array<Pet>, navController: NavController) {
+    LazyColumn(Modifier.fillMaxWidth()) {
+        items(pets) { animal ->
+            PetRow(animal, navController)
+        }
     }
 }
 
@@ -48,7 +110,7 @@ fun MyApp() {
 @Composable
 fun LightPreview() {
     MyTheme {
-        MyApp()
+        SimpleNav()
     }
 }
 
@@ -56,6 +118,6 @@ fun LightPreview() {
 @Composable
 fun DarkPreview() {
     MyTheme(darkTheme = true) {
-        MyApp()
+        SimpleNav()
     }
 }
